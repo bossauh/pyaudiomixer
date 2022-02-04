@@ -265,6 +265,8 @@ class OutputTrack:
 
         if blocking:
             _write()
+            while not self._playing:
+                await asyncio.sleep(0.001)
         else:
             threading.Thread(target=_write, daemon=True).start()
             while not self._playing:
