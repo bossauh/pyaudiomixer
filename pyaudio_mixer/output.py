@@ -178,7 +178,11 @@ class OutputTrack:
             The list of ndarrays.
         """
 
-        return np.array_split(data, len(data) / size)
+        n = len(data) / size
+        if n < 1:
+            n = 1
+
+        return np.array_split(data, n)
 
     async def play_file(
         self,
