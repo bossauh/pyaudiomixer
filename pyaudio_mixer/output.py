@@ -367,6 +367,8 @@ class OutputTrack:
                     f.write(data)
                 else:
                     self._playing = False
+                
+                time.sleep(0.001)
 
         """This code is only reached once the stop signal is True. (i.e., track has been stopped)"""
         self._stopped = True
