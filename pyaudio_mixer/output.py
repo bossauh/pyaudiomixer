@@ -104,7 +104,14 @@ class OutputTrack:
         while self._playing:
             await asyncio.sleep(0.001)
 
-    def write(self, data: np.ndarray, wait: bool = True) -> bool:
+    def write(
+        self, 
+        data: np.ndarray,
+        wait: bool = True, 
+        resample: bool = False, 
+        resampling_method: str = "soxr_vhq",
+        original_samplerate: int = None
+    ) -> bool:
         """
         Write the provided data into the buffer (i.e., play it on the speakers).
 
@@ -114,6 +121,12 @@ class OutputTrack:
             The data to write.
         `wait` : bool
             Wait for there to be a space in the queue. Defaults to True. If this is False, this function returns instantly.
+        `resample` : bool
+            Whether to resample the given data to match this track's samplerate. Defaults to False. If this is true, you have to provide the original samplerate via the `original_samplerate` parameter.
+        `resampling_method` : str
+            Method to use for resampling. Read more about it on `resample()`'s docstring. Defaults to "soxr_vhq".
+        `original_samplerate` : int
+            The samplerate of the provided data. You only need this parameter if `resample` is True.
 
         Returns
         -------
@@ -124,12 +137,19 @@ class OutputTrack:
         ------
         `InterruptedError` : 
             Raised when abort() get's called. How abort() basically works is that it first sends the clear signal, now once this function is called, we check if the clear signal has been sent and if it has been sent then it raises a InterruptedError, telling the caller that it's time to stop writing frames. (oh and it also clears the queue)
+        `ValueError` :
+            Raised when `resample` is True but `original_samplerate` was not provided.
         """
 
         if self._clear_signal:
             self.q.queue.clear()
             self._clear_signal = False
             raise InterruptedError
+        
+        if resample:
+            if original_samplerate is None:
+                raise ValueError("original_samplerate must be provided")
+            data = self.resample(data, original_samplerate, resampling_method)
 
         try:
             self.q.put(data, block=wait)
