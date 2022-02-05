@@ -242,7 +242,7 @@ class OutputTrack:
         await self.abort()
 
         if "always_2d" not in kwargs.keys():
-            kwargs["always_2d"] = False
+            kwargs["always_2d"] = True
 
         if "dtype" not in kwargs.keys():
             kwargs["dtype"] = "float32"
