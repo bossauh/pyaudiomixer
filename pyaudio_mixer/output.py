@@ -210,6 +210,7 @@ class OutputTrack:
         blocking: bool = False,
         resample: bool = True,
         chunk_size: int = 512,
+        load_in_memory: bool = True,
         **kwargs
     ) -> None:
 
@@ -231,8 +232,10 @@ class OutputTrack:
             Whether to call self.resample to match this track's samplerate. Defaults to True.
         `chunk_size` : int
             The entire audio data is split into chunks. This defines the length of each chunk. Defaults to 512.
+        `load_in_memory` : bool
+            Whether to load the entire file to memory. Defaults to True.
         **kwargs :
-            Other parameters to pass to soundfile.read
+            Other parameters to pass to soundfile.read or soundfile.blocks if load_in_memory is False.
         """
 
         # Stop whatever is playing (if there is any)
@@ -243,9 +246,38 @@ class OutputTrack:
 
         if "dtype" not in kwargs.keys():
             kwargs["dtype"] = "float32"
+        
+        if not load_in_memory:
+
+            target_sr = self.stream.samplerate
+
+            # Automatically figure out the best blocksize and resampling method
+            if "blocksize" not in kwargs.keys():
+                if target_sr >= 88200:
+                    kwargs["blocksize"] = 6192
+                else:
+                    kwargs["blocksize"] = 512
+            
+            if (target_sr >= 8000) and (target_sr <= 22050):
+                resampling_type = "soxr_qq"
+            elif ((target_sr >= 44100) and (target_sr <= 48000)) or target_sr >= 176400:
+                resampling_type = "fft"
+            elif (target_sr >= 88200) and (target_sr <= 96000):
+                resampling_type = "linear"
+            else:
+                resampling_type = "soxr_vhq"
+        
+        load_method = {
+            True: sf.read,
+            False: sf.blocks
+        }
 
         try:
-            data, samplerate = sf.read(path, **kwargs)
+            data = load_method[load_in_memory](path, **kwargs)
+            if load_in_memory:
+                data, samplerate = data
+            else:
+                _, samplerate = sf.read(path, frames=1)
         except RuntimeError as e:
             if not self.conversion_path:
                 raise UnsupportedFormat(e)
@@ -262,27 +294,39 @@ class OutputTrack:
             )
 
             ff.run()
-            return await self.play_file(out, blocking, resample, chunk_size, **kwargs)
+            return await self.play_file(out, blocking, resample, chunk_size, load_in_memory, **kwargs)
 
-        # Match the number of channels of this track.
-        try:
-            channel_count = data.shape[1]
-        except IndexError:
-            channel_count = 1
 
-        if channel_count != self.stream.channels:
-            if (channel_count == 1) and (self.stream.channels == 2):
-                channel_count = 2
-            data = np.repeat(data, channel_count, axis=-1)
+        def match_channels(d):
+            # Match the number of channels of this track.
+            try:
+                channel_count = d.shape[1]
+            except IndexError:
+                channel_count = 1
 
-        if resample:
-            # Match the samplerate of this track
-            data = self.resample(data, samplerate)
-        data = self.chunk_split(data, chunk_size)
+            if channel_count != self.stream.channels:
+                if (channel_count == 1) and (self.stream.channels == 2):
+                    channel_count = 2
+                d = np.repeat(d, channel_count, axis=-1)
+            return d
+        
+        if load_in_memory:
+            data = match_channels(data)
+
+            if resample:
+                # Match the samplerate of this track
+                data = self.resample(data, samplerate)
+            data = self.chunk_split(data, chunk_size)
 
         def _write():
             for d in data:
                 try:
+
+                    if not load_in_memory:
+                        d = match_channels(d)
+                        if resample:
+                            d = self.resample(d, samplerate, resampling_type)
+
                     self.write(d)
                 except (KeyboardInterrupt, InterruptedError):
                     break
