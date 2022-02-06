@@ -79,7 +79,7 @@ class OutputTrack:
     @volume.setter
     def volume(self, value: float) -> None:
         self._vol = value
-    
+
     @property
     def playing_details(self) -> Union[None, dict]:
         """
@@ -118,10 +118,10 @@ class OutputTrack:
             await asyncio.sleep(0.001)
 
     def write(
-        self, 
+        self,
         data: np.ndarray,
-        wait: bool = True, 
-        resample: bool = False, 
+        wait: bool = True,
+        resample: bool = False,
         resampling_method: str = "soxr_vhq",
         original_samplerate: int = None
     ) -> bool:
@@ -158,7 +158,7 @@ class OutputTrack:
             self.q.queue.clear()
             self._clear_signal = False
             raise InterruptedError
-        
+
         if resample:
             if original_samplerate is None:
                 raise ValueError("original_samplerate must be provided")
@@ -259,7 +259,7 @@ class OutputTrack:
 
         if "dtype" not in kwargs.keys():
             kwargs["dtype"] = "float32"
-        
+
         if not load_in_memory:
 
             target_sr = self.stream.samplerate
@@ -270,7 +270,7 @@ class OutputTrack:
                     kwargs["blocksize"] = 6192
                 else:
                     kwargs["blocksize"] = 512
-            
+
             if (target_sr >= 8000) and (target_sr <= 22050):
                 resampling_type = "soxr_qq"
             elif ((target_sr >= 44100) and (target_sr <= 48000)) or target_sr >= 176400:
@@ -279,7 +279,7 @@ class OutputTrack:
                 resampling_type = "linear"
             else:
                 resampling_type = "soxr_vhq"
-        
+
         load_method = {
             True: sf.read,
             False: sf.blocks
@@ -309,7 +309,6 @@ class OutputTrack:
             ff.run()
             return await self.play_file(out, blocking, resample, chunk_size, load_in_memory, **kwargs)
 
-
         def match_channels(d):
             # Match the number of channels of this track.
             try:
@@ -322,7 +321,7 @@ class OutputTrack:
                     channel_count = 2
                 d = np.repeat(d, channel_count, axis=-1)
             return d
-        
+
         if load_in_memory:
             data = match_channels(data)
 
@@ -343,14 +342,14 @@ class OutputTrack:
                     self.write(d)
                 except (KeyboardInterrupt, InterruptedError):
                     break
-        
+
         # Assign playing details
         __detail_sr = self.stream.samplerate if resample else samplerate
         self._playing_details = {
             "file": path,
-            "duration": librosa.get_duration(filename=path, sr=__detail_sr) ,
+            "duration": librosa.get_duration(filename=path, sr=__detail_sr),
             "samplerate": __detail_sr,
-            "read": 0 # How many seconds were already read
+            "read": 0  # How many seconds were already read
         }
 
         if blocking:
@@ -389,7 +388,7 @@ class OutputTrack:
                     f.write(data)
                 else:
                     self._playing = False
-                
+
                 time.sleep(0.001)
 
         """This code is only reached once the stop signal is True. (i.e., track has been stopped)"""
