@@ -1,7 +1,8 @@
 """
-tests.tack
+tests.output
 ----------
-This file is meant to be imported from within run_tests.py
+This file is meant to be imported from within run_tests.py.
+This test will test the output tracks.
 """
 
 import asyncio
@@ -10,9 +11,9 @@ from maglevapi.testing import Testing
 from pyaudio_mixer import OutputTrack
 
 
-class TestTrack(Testing):
+class TestOutput(Testing):
     def __init__(self) -> None:
-        super().__init__(save_path="./tests/results/TestTrack.tresult")
+        super().__init__(save_path="./tests/results/TestOutput.tresult")
         self.conversion_path = "./tests/data/converted"
         self.test_files = [
             "./tests/data/48000khz.wav",

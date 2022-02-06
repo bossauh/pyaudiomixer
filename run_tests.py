@@ -1,9 +1,9 @@
 import asyncio
-from tests.track import TestTrack
+from tests.output import TestOutput
 
 
 async def main() -> None:
-    await TestTrack().run()
+    await TestOutput().run()
 
 
 if __name__ == "__main__":
