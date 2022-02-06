@@ -1,4 +1,5 @@
 import asyncio
+from typing import Union
 import math
 import os
 import queue
@@ -65,6 +66,7 @@ class OutputTrack:
         self._vol = kwargs.get("volume", 1.0)
         self._stopped = True
         self._playing = False
+        self._playing_details = {}
 
         # Start the track on initialization
         self.stream = None
@@ -77,6 +79,16 @@ class OutputTrack:
     @volume.setter
     def volume(self, value: float) -> None:
         self._vol = value
+    
+    @property
+    def playing_details(self) -> Union[None, dict]:
+        """
+        Get details about the currently playing file (played via play_file coroutine). Returns None if there is no playing file.
+        """
+
+        if self._playing_details:
+            return self._playing_details
+        return None
 
     def start(self) -> None:
         threading.Thread(target=self.__start__, daemon=True).start()
@@ -100,6 +112,7 @@ class OutputTrack:
 
         if self._playing:
             self._clear_signal = True
+            self._playing_details = {}
 
         while self._playing:
             await asyncio.sleep(0.001)
@@ -330,6 +343,15 @@ class OutputTrack:
                     self.write(d)
                 except (KeyboardInterrupt, InterruptedError):
                     break
+        
+        # Assign playing details
+        __detail_sr = self.stream.samplerate if resample else samplerate
+        self._playing_details = {
+            "file": path,
+            "duration": librosa.get_duration(filename=path, sr=__detail_sr) ,
+            "samplerate": __detail_sr,
+            "read": 0 # How many seconds were already read
+        }
 
         if blocking:
             _write()
