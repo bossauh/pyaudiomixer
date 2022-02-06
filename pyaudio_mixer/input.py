@@ -59,6 +59,11 @@ class InputTrack:
 
         while self._stopped:
             time.sleep(0.001)
+        
+    def stop(self) -> None:
+        self._stop_signal = True
+        while not self._stopped:
+            time.sleep(0.001)
     
     def __start__(self) -> None:
         with sd.InputStream(**self.sounddevice_parameters) as f:
@@ -70,3 +75,9 @@ class InputTrack:
                 self.overflow = overflow
 
                 time.sleep(0.001)
+        
+        """This code is only reached once the track has been stopped."""
+        self._stopped = True
+        self.stream = None
+        self.__data = None
+        self._stop_signal = False
