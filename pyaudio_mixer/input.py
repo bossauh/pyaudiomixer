@@ -51,8 +51,12 @@ class InputTrack:
         `np.ndarray` :
             Audio data with shape of (frames (or size of chunks), channels).
         """
+
+        data = self.__data
+        if self.callback:
+            data = self.callback(self, data, self.overflow)
         
-        return self.__data
+        return data
 
     def start(self) -> None:
         threading.Thread(target=self.__start__, daemon=True).start()
