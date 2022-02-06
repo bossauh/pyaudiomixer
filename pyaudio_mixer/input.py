@@ -1,3 +1,4 @@
+from typing import Union
 import sounddevice as sd
 import threading
 import time
@@ -13,6 +14,13 @@ class InputTrack:
         The name of this track.
     `sounddevice_parameters` : dict
         Key, Value pair that will be passed as parameters to sd.InputStream. Defaults to None.
+    `callback` : Callable
+        A user supplied function that looks and functions like the one provided below. Defaults to None. This callback can be used to modify the data before being returned by the .read() method.
+
+        >>> def callback(track: InputTrack, data: np.ndarray, overflow: bool) -> np.ndarray:
+        >>>     # Modify `data` to your likings if needed. Then return it back either as a ndarray again or "None"
+        >>>     return data
+
     `chunk_size` : The size of each chunk returned from .read(). Defaults to 512.
     """
 
@@ -20,6 +28,7 @@ class InputTrack:
         self.name = name
         self.sounddevice_parameters = kwargs.get("sounddevice_parameters", {})
         self.chunk_size = kwargs.get("chunk_size", 512)
+        self.callback = kwargs.get("callback")
 
         # Signal Variables
         self._stop_signal = False
