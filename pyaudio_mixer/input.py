@@ -32,7 +32,7 @@ class InputTrack:
         self.stream = None
         self.start()
     
-    def read(self) -> np.ndarray:
+    def read(self) -> Union[np.ndarray, None]:
 
         """
         Read the data coming from the InputStream.
