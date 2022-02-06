@@ -24,6 +24,10 @@ class InputTrack:
         self._stop_signal = False
         self._stopped = True
 
+        # Data Variable
+        self.__data = None
+        self.overflow = False
+
         self.stream = None
         self.start()
 
@@ -38,4 +42,8 @@ class InputTrack:
             self._stopped = False
             self.stream = f
             while not self._stop_signal:
-                data, overflow = f.read(f.read_available)
+                data, overflow = f.read(self.chunk_size)
+                self.__data = data
+                self.overflow = overflow
+
+                time.sleep(0.001)
