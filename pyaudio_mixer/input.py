@@ -30,6 +30,19 @@ class InputTrack:
 
         self.stream = None
         self.start()
+    
+    def read(self) -> np.ndarray:
+
+        """
+        Read the data coming from the InputStream.
+
+        Returns
+        -------
+        `np.ndarray` :
+            Audio data with shape of (frames (or size of chunks), channels).
+        """
+        
+        return self.__data
 
     def start(self) -> None:
         threading.Thread(target=self.__start__, daemon=True).start()
