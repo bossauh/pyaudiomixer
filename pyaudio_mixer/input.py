@@ -41,6 +41,7 @@ class InputTrack:
 
         # Data Variable
         self.__data = None
+        self.__buffer = []
         self.overflow = False
 
         # BasicFX
@@ -82,7 +83,7 @@ class InputTrack:
         `np.ndarray` :
             Audio data with shape of (frames (or size of chunks), channels).
         `None` :
-            If for some reason no data has been recorded yet. (Usually doesn't happen unless read() is called immediately after initialization.)
+            If the data that's supposed to be returned is the same as the last few returned data. When calling .read() constantly (which you most likely would), you should always check if the value is None.
         """
 
         data = self.__data
@@ -92,7 +93,14 @@ class InputTrack:
         if self.apply_basic_fx:
             data = self._apply_basic_fx(data)
         
-        return data
+        if not any((data == x).all() for x in self.__buffer):
+            self.__buffer.append(data)
+
+            if len(self.__buffer) > 1024:
+                self.__buffer.pop(0)
+
+            return data
+        return None
 
     def start(self) -> None:
         threading.Thread(target=self.__start__, daemon=True).start()
