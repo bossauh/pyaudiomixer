@@ -3,6 +3,7 @@ import sounddevice as sd
 import threading
 import time
 import numpy as np
+from .utils import BasicFX
 
 
 class InputTrack:
@@ -20,7 +21,10 @@ class InputTrack:
         >>> def callback(track: InputTrack, data: np.ndarray, overflow: bool) -> np.ndarray:
         >>>     # Modify `data` to your likings if needed. Then return it back either as a ndarray again or "None"
         >>>     return data
-
+    `apply_basic_fx` : bool
+        Whether to apply the basic effects such as the volume changer. Defaults to True. This uses the BasicFX class.
+    `volume` : float
+        The volume of this track (how loud the input is). Defaults to 1.0 (100%). Volume changing is controlled by the BasicFX class.
     `chunk_size` : The size of each chunk returned from .read(). Defaults to 512.
     """
 
@@ -29,6 +33,7 @@ class InputTrack:
         self.sounddevice_parameters = kwargs.get("sounddevice_parameters", {})
         self.chunk_size = kwargs.get("chunk_size", 512)
         self.callback = kwargs.get("callback")
+        self.apply_basic_fx = kwargs.get("apply_basic_fx", True)
 
         # Signal Variables
         self._stop_signal = False
@@ -38,8 +43,34 @@ class InputTrack:
         self.__data = None
         self.overflow = False
 
+        # BasicFX
+        self.basicfx = BasicFX()
+        self.effect_parameters = {
+            "set_volume": {
+                "factor": kwargs.get("volume", 1.0)
+            }
+        }
+
         self.stream = None
         self.start()
+    
+    @property
+    def volume(self) -> float:
+        return self.effect_parameters["set_volume"]["factor"]
+    
+    @volume.setter
+    def volume(self, value: float) -> None:
+        self.effect_parameters["set_volume"]["factor"] = value
+    
+    def _apply_basic_fx(self, data: np.ndarray) -> np.ndarray:
+
+        if data is None:
+            return
+
+        for effect in self.basicfx.effects:
+            params = self.effect_parameters.get(effect.__name__, {})
+            data = effect(data, **params)
+        return data
     
     def read(self) -> Union[np.ndarray, None]:
 
@@ -55,6 +86,9 @@ class InputTrack:
         data = self.__data
         if self.callback:
             data = self.callback(self, data, self.overflow)
+        
+        if self.apply_basic_fx:
+            data = self._apply_basic_fx(data)
         
         return data
 
