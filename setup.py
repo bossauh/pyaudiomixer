@@ -13,7 +13,7 @@ install_requires = [
 
 
 setup(
-    name="pyaudiomixer",
+    name="mixer_pyaudio",
     packages=["pyaudio_mixer"],
     version="0.1",
     license="MIT",
