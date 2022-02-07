@@ -15,6 +15,7 @@ import sounddevice as sd
 import soundfile as sf
 
 from .exceptions import *
+from .utils import BasicFX
 
 sd.default.channels = 2
 sd.default.samplerate = 44100
@@ -39,9 +40,9 @@ class OutputTrack:
     `conversion_path` : str
         Directory to store ffmpeg conversions. FFMpeg conversions are done when the provided file format is not supported. Defaults to None. When this is None, a UnsupportedFormat is instead raised everytime PyAudioMixer encounters a unsupported audio format.
     `apply_basic_fx` : bool
-        Whether to apply the basic effects such as the volume changer. Defaults to True.
+        Whether to apply the basic effects such as the volume changer. Defaults to True. This uses the BasicFX class.
     `volume` : int
-        The volume of this track. Defaults to 1.0 (100%).
+        The volume of this track. Defaults to 1.0 (100%). Volume changing is controlled by the BasicFX class.
     `queue_maxsize` : int
         The maxsize parameter passed onto the queue.Queue of this track. Defaults to 50. You usually don't need to touch this.
     """
@@ -63,10 +64,17 @@ class OutputTrack:
         # Signal Variables
         self._clear_signal = False
         self._stop_signal = False
-        self._vol = kwargs.get("volume", 1.0)
         self._stopped = True
         self._playing = False
         self._playing_details = {}
+
+        # Effect variables
+        self.effect_parameters = {
+            "set_volume": {
+                "factor": kwargs.get("volume", 1.0)
+            }
+        }
+        self.basicfx = BasicFX()
 
         # Start the track on initialization
         self.stream = None
@@ -74,11 +82,11 @@ class OutputTrack:
 
     @property
     def volume(self) -> float:
-        return self._vol
+        return self.effect_parameters["set_volume"]["factor"]
 
     @volume.setter
     def volume(self, value: float) -> None:
-        self._vol = value
+        self.effect_parameters["set_volume"]["factor"] = value
 
     @property
     def playing_details(self) -> Union[None, dict]:
@@ -362,8 +370,10 @@ class OutputTrack:
                 await asyncio.sleep(0.001)
 
     def _apply_basic_fx(self, data: np.ndarray) -> np.ndarray:
-        return np.multiply(data, pow(
-            2, (math.sqrt(math.sqrt(math.sqrt(self._vol))) * 192 - 192) / 6), casting="unsafe")
+        for f in self.basicfx.effects:
+            params = self.effect_parameters.get(f.__name__, {})
+            data = f(data, **params)
+        return data
 
     def __start__(self) -> None:
         with sd.OutputStream(**self.sounddevice_parameters) as f:
