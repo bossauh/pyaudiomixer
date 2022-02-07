@@ -5,7 +5,7 @@ import math
 class BasicFX:
     
     """
-    This class is responsible for handling basic effects such as volume.
+    This class is responsible for handling basic effects such as volume changer.
     """
 
     def __init__(self) -> None:
