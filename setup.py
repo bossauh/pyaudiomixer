@@ -20,7 +20,7 @@ setup(
     description="Audio mixing simplified.",
     author="Philippe Mathew",
     author_email="philmattdev@gmail.com",
-    url="",
+    url="https://github.com/bossauh/pyaudiomixer",
     download_url="",
     keywords=["audio", "mixer", "mixing", "tool"],
     install_requires=install_requires,
