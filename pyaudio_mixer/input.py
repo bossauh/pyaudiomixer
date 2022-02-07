@@ -81,6 +81,8 @@ class InputTrack:
         -------
         `np.ndarray` :
             Audio data with shape of (frames (or size of chunks), channels).
+        `None` :
+            If for some reason no data has been recorded yet. (Usually doesn't happen unless read() is called immediately after initialization.)
         """
 
         data = self.__data
