@@ -21,7 +21,7 @@ setup(
     author="Philippe Mathew",
     author_email="philmattdev@gmail.com",
     url="https://github.com/bossauh/pyaudiomixer",
-    download_url="",
+    download_url="https://github.com/bossauh/pyaudiomixer/archive/refs/tags/v_01.tar.gz",
     keywords=["audio", "mixer", "mixing", "tool"],
     install_requires=install_requires,
     classifiers=[
