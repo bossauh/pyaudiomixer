@@ -1,7 +1,7 @@
 import asyncio
 import numpy as np
 from maglevapi.testing import Testing
-from pyaudio_mixer import InputTrack
+from pyaudio_mixer import InputTrack, OutputTrack
 
 
 class TestInput(Testing):
@@ -60,3 +60,27 @@ class TestInput(Testing):
         t.stop()
         assert t._stopped
         assert t.read() is None
+    
+    async def test_input_output(self) -> None:
+
+        params = {
+            "sounddevice_parameters": {
+                "samplerate": 16000,
+                "blocksize": 512,
+                "dtype": "float32",
+                "channels": 1
+            }
+        }
+
+        i = InputTrack("input", **params)
+        o = OutputTrack("output", **params)
+        await asyncio.sleep(1)
+
+        for _ in range(1024 * 50):
+            frame = i.read()
+            if frame is not None:
+                o.write(frame)
+        
+        i.stop()
+        await o.stop()
+        assert i._stopped
