@@ -15,6 +15,7 @@ import soundfile as sf
 
 from .exceptions import *
 from .utils import BasicFX
+from .input import InputTrack
 
 sd.default.channels = 2
 sd.default.samplerate = 44100
@@ -63,6 +64,7 @@ class OutputTrack:
         # Signal Variables
         self._clear_signal = False
         self._stop_signal = False
+        self._stop_cast_signal = False
         self._stopped = True
         self._playing = False
         self._playing_details = {}
@@ -106,6 +108,7 @@ class OutputTrack:
 
     async def stop(self) -> None:
         await self.abort()
+        self.stop_cast()
         self._stop_signal = True
 
         # Wait for it to stop before returning
@@ -123,6 +126,47 @@ class OutputTrack:
 
         while self._playing:
             await asyncio.sleep(0.001)
+        
+    def stop_cast(self) -> None:
+        """Stop the currently casted input if there is any."""
+        self._stop_cast_signal = True
+        
+    def cast_input(self, inp: InputTrack) -> None:
+        """
+        Direct all data of the provided input track to this output track.
+        This is a non blocking function that runs in the background. 
+        Casting can be stopped by calling `cast_stop()`
+
+        Notes
+        -----
+        - This does not wait for the cast to start therefore this function returns immediately.
+
+        Parameters
+        ----------
+        `inp` : InputTrack
+            The input track to use.
+
+        Raises
+        ------
+        `RuntimeError` :
+            Raised when the provided track isn't even running to begin with.
+        """
+
+        if inp._stopped:
+            raise RuntimeError("input track is not running")
+
+        threading.Thread(target=self.__cast_input__, args=(inp,), daemon=True).start()
+    
+    def __cast_input__(self, inp: InputTrack) -> None:
+        while not self._stop_cast_signal:
+            frame = inp.read()
+            if inp._stopped:
+                break
+
+            if frame is not None:
+                self.write(frame)
+        
+        self._stop_cast_signal = False
 
     def write(
         self,
