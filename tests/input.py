@@ -42,11 +42,12 @@ class TestInput(Testing):
             assert track.stream.samplerate == sounddevice_parameters["samplerate"]
             assert track.stream.channels == sounddevice_parameters["channels"]
             assert track.stream.dtype == sounddevice_parameters["dtype"]
+            assert track.volume == 0.5
 
             called = True
             return data
 
-        t = InputTrack("track", callback=callback, chunk_size=1024, sounddevice_parameters=sounddevice_parameters)
+        t = InputTrack("track", callback=callback, chunk_size=1024, sounddevice_parameters=sounddevice_parameters, volume=0.5)
         await asyncio.sleep(0.5)
 
         for _ in range(1024 * 4):
