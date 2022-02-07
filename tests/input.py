@@ -14,6 +14,7 @@ class TestInput(Testing):
 
         assert t.name == "track"
         assert t.read() is not None
+        await asyncio.sleep(.2)
         assert t.read().shape[0] == 512
         assert not t._stopped
         assert t.stream
@@ -50,8 +51,9 @@ class TestInput(Testing):
         t = InputTrack("track", callback=callback, chunk_size=1024, sounddevice_parameters=sounddevice_parameters, volume=0.5)
         await asyncio.sleep(0.5)
 
-        for _ in range(1024 * 4):
+        for _ in range(50):
             assert t.read() is not None
+            await asyncio.sleep(.1)
 
         assert called
         await asyncio.sleep(.5)
