@@ -84,3 +84,15 @@ class TestInput(Testing):
         i.stop()
         await o.stop()
         assert i._stopped
+    
+    async def test_input_output_cast(self) -> None:
+        i = InputTrack("input")
+        o = OutputTrack("output")
+        await asyncio.sleep(1)
+        o.cast_input(i)
+
+        await asyncio.sleep(5)
+        o.stop_cast()
+        await asyncio.sleep(5)
+        assert not o._stop_cast_signal
+        await o.stop()
