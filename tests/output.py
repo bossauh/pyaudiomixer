@@ -77,7 +77,7 @@ class TestOutput(Testing):
         await t.stop()
     
     async def test_output_play_file(self) -> None:
-        volume = 0.8
+        volume = 0.6
         t = OutputTrack("track", conversion_path=self.conversion_path, volume=volume)
         assert t.volume == volume
 
@@ -90,6 +90,9 @@ class TestOutput(Testing):
         await t.abort()
         assert not t.playing_details
         assert not t._playing
+
+        t.volume = 0.8
+        assert t.volume == 0.8
 
         # Test no resampling
         await t.play_file(self.test_files[0], blocking=False, resample=False, load_in_memory=False)
