@@ -8,9 +8,14 @@ class BasicFX:
     This class is responsible for handling basic effects such as volume changer.
     """
 
-    def __init__(self, dtype: str = "float32") -> None:
-        self.effects = [self.set_volume]
+    def __init__(self, dtype: str = "float32", samplerate: int = 44100) -> None:
+
+        self.effects = [
+            self.set_volume
+        ]
+
         self.dtype = dtype
+        self.samplerate = samplerate
     
     def set_volume(self, data: np.ndarray, factor: float) -> np.ndarray:
         """Increase the volume of the provided audio data by a factor of `float`"""
