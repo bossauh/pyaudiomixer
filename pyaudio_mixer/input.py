@@ -72,8 +72,9 @@ class InputTrack:
             return
 
         for effect in self.basicfx.effects:
-            params = self.effect_parameters.get(effect.__name__, {})
-            data = effect(data, **params)
+            params = self.effect_parameters.get(effect.__name__)
+            if params is not None:
+                data = effect(data, **params)
         return data
     
     def read(self) -> Union[np.ndarray, None]:

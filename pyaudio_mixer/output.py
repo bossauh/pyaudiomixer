@@ -417,8 +417,9 @@ class OutputTrack:
 
     def _apply_basic_fx(self, data: np.ndarray) -> np.ndarray:
         for f in self.basicfx.effects:
-            params = self.effect_parameters.get(f.__name__, {})
-            data = f(data, **params)
+            params = self.effect_parameters.get(f.__name__)
+            if params is not None:
+                data = f(data, **params)
         return data
 
     def __start__(self) -> None:
