@@ -21,7 +21,6 @@ class TestInput(Testing):
 
         await asyncio.sleep(.5)
         t.stop()
-        assert t.read() is None
         assert t._stopped
         assert t.stream is None
     
