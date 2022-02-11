@@ -14,7 +14,7 @@ class TestInput(Testing):
 
         assert t.name == "track"
         assert t.read() is not None
-        await asyncio.sleep(.2)
+        await asyncio.sleep(.4)
         assert t.read().shape[0] == 512
         assert not t._stopped
         assert t.stream
