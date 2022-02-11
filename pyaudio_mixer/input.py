@@ -45,7 +45,10 @@ class InputTrack:
         self.overflow = False
 
         # BasicFX
-        self.basicfx = BasicFX(dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[0]))
+        self.basicfx = BasicFX(
+            dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[0]),
+            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate[0])
+        )
         self.effect_parameters = {
             "set_volume": {
                 "factor": kwargs.get("volume", 1.0)

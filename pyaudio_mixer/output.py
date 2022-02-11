@@ -75,7 +75,10 @@ class OutputTrack:
                 "factor": kwargs.get("volume", 1.0)
             }
         }
-        self.basicfx = BasicFX(dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[1]))
+        self.basicfx = BasicFX(
+            dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[1]),
+            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate[1])
+        )
 
         # Start the track on initialization
         self.stream = None
