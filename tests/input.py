@@ -76,7 +76,7 @@ class TestInput(Testing):
         o = OutputTrack("output", **params)
         await asyncio.sleep(1)
 
-        for _ in range(1024 * 50):
+        for _ in range(1024 * 8):
             frame = i.read()
             if frame is not None:
                 o.write(frame)
