@@ -77,7 +77,7 @@ class OutputTrack:
         }
         self.basicfx = BasicFX(
             dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[1]),
-            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate[1])
+            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate)
         )
 
         # Start the track on initialization

@@ -47,7 +47,7 @@ class InputTrack:
         # BasicFX
         self.basicfx = BasicFX(
             dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[0]),
-            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate[0])
+            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate)
         )
         self.effect_parameters = {
             "set_volume": {
