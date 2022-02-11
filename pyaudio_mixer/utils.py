@@ -1,4 +1,5 @@
 import math
+import noisereduce
 
 import numpy as np
 from pedalboard import (Chorus, Compressor, Pedalboard, Phaser, PitchShift,
@@ -33,7 +34,8 @@ class BasicFX:
             self.phaser,
             self.pitch_shift,
             self.compressor,
-            self.noise_gate
+            self.noise_gate,
+            self.noise_reduction
         ]
 
         self.dtype = dtype
@@ -69,3 +71,7 @@ class BasicFX:
     def noise_gate(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([NoiseGate(**params)])
         return board(data, self.samplerate)
+    
+    def noise_reduction(self, data: np.ndarray, **params) -> np.ndarray:
+        data = data.transpose()
+        return noisereduce.reduce_noise(data, sr=self.samplerate, **params)
