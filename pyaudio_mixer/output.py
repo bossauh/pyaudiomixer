@@ -43,6 +43,8 @@ class OutputTrack:
         Whether to apply the basic effects such as the volume changer. Defaults to True. This uses the BasicFX class.
     `volume` : int
         The volume of this track. Defaults to 1.0 (100%). Volume changing is controlled by the BasicFX class.
+    `effect_parameters` :
+        Dictionary that tells the BasicFX class what effects to use. Key being the function effect and the value (which is a another dictionary) being the parameters. Defaults to None. (Do not set a set_volume effect here. That is controlled by the `volume` parameter)
     `queue_maxsize` : int
         The maxsize parameter passed onto the queue.Queue of this track. Defaults to 50. You usually don't need to touch this.
     """
@@ -53,6 +55,7 @@ class OutputTrack:
         self.sounddevice_parameters = kwargs.get("sounddevice_parameters", {})
         self.conversion_path = kwargs.get("conversion_path")
         self.apply_basic_fx = kwargs.get("apply_basic_fx", True)
+        self.__kwargs = kwargs
 
         # Main queue, this is where all data that
         # then gets outputted to the user is stored.
@@ -70,15 +73,13 @@ class OutputTrack:
         self._playing_details = {}
 
         # Effect variables
-        self.effect_parameters = {
-            "set_volume": {
-                "factor": kwargs.get("volume", 1.0)
-            }
-        }
         self.basicfx = BasicFX(
             dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[1]),
             samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate)
         )
+        __effect_params = kwargs.get("effect_parameters", {})
+        self.effect_parameters = {}
+        self.update_effects(__effect_params)
 
         # Start the track on initialization
         self.stream = None
@@ -101,6 +102,26 @@ class OutputTrack:
         if self._playing_details:
             return self._playing_details
         return None
+    
+    def update_effects(self, effect_parameters: dict) -> dict:
+        """
+        Update the effect_parameters attribute of this class. Check docstring of the class itself for more information about that attribute. (Also to know how this parameter is formatted)
+
+        Returns
+        -------
+        `dict` :
+            A dictionary containing what effects are enabled (and their parameters)
+        """
+        
+        set_volume = self.effect_parameters.get("set_volume", {})
+        effect_parameters.pop("set_volume", None)
+        self.effect_parameters = {
+            "set_volume": {
+                "factor": set_volume.get("factor", self.__kwargs.get("volume", 1.0))
+            },
+            **effect_parameters
+        }
+        return self.effect_parameters
 
     def start(self) -> None:
         threading.Thread(target=self.__start__, daemon=True).start()

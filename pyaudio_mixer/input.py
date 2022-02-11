@@ -25,6 +25,8 @@ class InputTrack:
         Whether to apply the basic effects such as the volume changer. Defaults to True. This uses the BasicFX class.
     `volume` : float
         The volume of this track (how loud the input is). Defaults to 1.0 (100%). Volume changing is controlled by the BasicFX class.
+    `effect_parameters` :
+        Dictionary that tells the BasicFX class what effects to use. Key being the function effect and the value (which is a another dictionary) being the parameters. Defaults to None. (Do not set a set_volume effect here. That is controlled by the `volume` parameter)
     `chunk_size` : The size of each chunk returned from .read(). Defaults to 512.
     """
 
@@ -34,6 +36,7 @@ class InputTrack:
         self.chunk_size = kwargs.get("chunk_size", 512)
         self.callback = kwargs.get("callback")
         self.apply_basic_fx = kwargs.get("apply_basic_fx", True)
+        self.__kwargs = kwargs
 
         # Signal Variables
         self._stop_signal = False
@@ -49,11 +52,9 @@ class InputTrack:
             dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[0]),
             samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate)
         )
-        self.effect_parameters = {
-            "set_volume": {
-                "factor": kwargs.get("volume", 1.0)
-            }
-        }
+        __effect_params = kwargs.get("effect_parameters", {})
+        self.effect_parameters = {}
+        self.update_effects(__effect_params)
 
         self.stream = None
         self.start()
@@ -65,6 +66,26 @@ class InputTrack:
     @volume.setter
     def volume(self, value: float) -> None:
         self.effect_parameters["set_volume"]["factor"] = value
+    
+    def update_effects(self, effect_parameters: dict) -> dict:
+        """
+        Update the effect_parameters attribute of this class. Check docstring of the class itself for more information about that attribute. (Also to know how this parameter is formatted)
+
+        Returns
+        -------
+        `dict` :
+            A dictionary containing what effects are enabled (and their parameters)
+        """
+        
+        set_volume = self.effect_parameters.get("set_volume", {})
+        effect_parameters.pop("set_volume", None)
+        self.effect_parameters = {
+            "set_volume": {
+                "factor": set_volume.get("factor", self.__kwargs.get("volume", 1.0))
+            },
+            **effect_parameters
+        }
+        return self.effect_parameters
     
     def _apply_basic_fx(self, data: np.ndarray) -> np.ndarray:
 
