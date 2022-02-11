@@ -95,3 +95,47 @@ class TestInput(Testing):
         await asyncio.sleep(5)
         assert not o._stop_cast_signal
         await o.stop()
+
+    async def test_input_output_pedalboard(self) -> None:
+        params = {
+            "sounddevice_parameters": {
+                "samplerate": 16000,
+                "blocksize": 1024 * 2,
+                "dtype": "float32",
+                "channels": 1
+            }
+        }
+        effect_parameters = {
+            "chorus": {
+                "depth": 1.5,
+                "rate_hz": 6.0
+            },
+            "reverb": {},
+            "phaser": {},
+            "pitch_shift": {"semitones": 3},
+            "compressor": {},
+            "noise_gate": {},
+        }
+        
+        i = InputTrack(
+            "i", 
+            effect_parameters=effect_parameters,
+            chunk_size=1024 * 3,
+            volume=1.4,
+            **params
+        )
+        o = OutputTrack("o", **params)
+
+        assert i.effect_parameters == {
+            "set_volume": {
+                "factor": i.volume
+            },
+            **effect_parameters
+        }
+
+        await asyncio.sleep(1)
+
+        o.cast_input(i)
+        await asyncio.sleep(5)
+        await o.stop()
+        await asyncio.sleep(.2)
