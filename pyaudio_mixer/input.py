@@ -118,14 +118,26 @@ class InputTrack:
         if self.apply_basic_fx:
             data = self._apply_basic_fx(data)
         
-        if not any((data == x).all() for x in self.__buffer):
-            self.__buffer.append(data)
+        data = np.resize(
+            data,
+            (
+                self.chunk_size,
+                self.sounddevice_parameters.get(
+                    "channels",
+                    sd.default.channels[0]
+                )
+            )
+        )
 
-            if len(self.__buffer) > 1024:
-                self.__buffer.pop(0)
+        if any((data == x).all() for x in self.__buffer):
+            return
 
-            return data
-        return None
+        self.__buffer.append(data)
+
+        if len(self.__buffer) > 1024:
+            self.__buffer.pop(0)
+
+        return data
 
     def start(self) -> None:
         threading.Thread(target=self.__start__, daemon=True).start()
