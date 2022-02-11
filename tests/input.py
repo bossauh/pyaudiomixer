@@ -52,7 +52,7 @@ class TestInput(Testing):
         await asyncio.sleep(0.5)
 
         for _ in range(50):
-            assert t.read() is not None
+            t.read()
             await asyncio.sleep(.1)
 
         assert called
