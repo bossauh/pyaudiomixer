@@ -35,7 +35,9 @@ class BasicFX:
             self.pitch_shift,
             self.compressor,
             self.noise_gate,
-            self.noise_reduction
+            self.noise_reduction,
+            self.highpass_filter,
+            self.lowpass_filter
         ]
 
         self.dtype = dtype
