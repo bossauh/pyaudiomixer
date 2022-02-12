@@ -3,7 +3,7 @@ import noisereduce
 
 import numpy as np
 from pedalboard import (Chorus, Compressor, Pedalboard, Phaser, PitchShift,
-                        Reverb, NoiseGate)
+                        Reverb, NoiseGate, HighpassFilter, LowpassFilter)
 
 
 class BasicFX:
@@ -75,3 +75,11 @@ class BasicFX:
     def noise_reduction(self, data: np.ndarray, **params) -> np.ndarray:
         data = data.transpose()
         return noisereduce.reduce_noise(data, sr=self.samplerate, **params)
+    
+    def highpass_filter(self, data: np.ndarray, **params) -> np.ndarray:
+        board = Pedalboard([HighpassFilter(**params)])
+        return board(data, self.samplerate)
+    
+    def lowpass_filter(self, data: np.ndarray, **params) -> np.ndarray:
+        board = Pedalboard([LowpassFilter(**params)])
+        return board(data, self.samplerate)
