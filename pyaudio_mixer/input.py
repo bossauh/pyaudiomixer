@@ -155,7 +155,11 @@ class InputTrack:
             self._stopped = False
             self.stream = f
             while not self._stop_signal:
-                data, overflow = f.read(self.chunk_size)
+                try:
+                    data, overflow = f.read(self.chunk_size)
+                except sd.PortAudioError:
+                    break
+                
                 self.__data = data
                 self.overflow = overflow
 
