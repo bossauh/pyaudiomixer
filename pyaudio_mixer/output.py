@@ -302,6 +302,7 @@ class OutputTrack:
         resample: bool = True,
         chunk_size: int = 512,
         load_in_memory: bool = True,
+        play_count: int = 1,
         **kwargs
     ) -> None:
 
@@ -325,6 +326,8 @@ class OutputTrack:
             The entire audio data is split into chunks. This defines the length of each chunk. Defaults to 512.
         `load_in_memory` : bool
             Whether to load the entire file to memory. Defaults to True.
+        `play_count` : int
+            How many times to play the audio. Defaults to 1.
         **kwargs :
             Other parameters to pass to soundfile.read or soundfile.blocks if load_in_memory is False.
         """
@@ -383,7 +386,13 @@ class OutputTrack:
 
             ff.run()
             return await self.play_file(
-                out, blocking, resample, chunk_size, load_in_memory, **kwargs
+                out,
+                blocking,
+                resample,
+                chunk_size,
+                load_in_memory,
+                play_count,
+                **kwargs
             )
 
         def match_channels(d):
@@ -408,17 +417,23 @@ class OutputTrack:
             data = self.chunk_split(data, chunk_size)
 
         def _write():
-            for d in data:
-                try:
+            i = 0
+            while play_count != i:
+                print("Playing first")
+                for d in data:
+                    try:
 
-                    if not load_in_memory:
-                        d = match_channels(d)
-                        if resample:
-                            d = self.resample(d, samplerate, resampling_type)
+                        if not load_in_memory:
+                            d = match_channels(d)
+                            if resample:
+                                d = self.resample(d, samplerate, resampling_type)
 
-                    self.write(d)
-                except (KeyboardInterrupt, InterruptedError):
-                    break
+                        self.write(d)
+                    except (KeyboardInterrupt, InterruptedError):
+                        return
+
+                print("Playing again", i, play_count)
+                i += 1
 
         # Assign playing details
         __detail_sr = self.stream.samplerate if resample else samplerate
