@@ -1,8 +1,10 @@
-from typing import Union
-import sounddevice as sd
 import threading
 import time
+from typing import Union
+
 import numpy as np
+import sounddevice as sd
+
 from .utils import BasicFX
 
 
@@ -50,7 +52,9 @@ class InputTrack:
         # BasicFX
         self.basicfx = BasicFX(
             dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[0]),
-            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate)
+            samplerate=self.sounddevice_parameters.get(
+                "samplerate", sd.default.samplerate
+            ),
         )
         __effect_params = kwargs.get("effect_parameters", {})
         self.effect_parameters = {}
@@ -58,15 +62,15 @@ class InputTrack:
 
         self.stream = None
         self.start()
-    
+
     @property
     def volume(self) -> float:
         return self.effect_parameters["set_volume"]["factor"]
-    
+
     @volume.setter
     def volume(self, value: float) -> None:
         self.effect_parameters["set_volume"]["factor"] = value
-    
+
     def update_effects(self, effect_parameters: dict) -> dict:
         """
         Update the effect_parameters attribute of this class. Check docstring of the class itself for more information about that attribute. (Also to know how this parameter is formatted)
@@ -76,17 +80,17 @@ class InputTrack:
         `dict` :
             A dictionary containing what effects are enabled (and their parameters)
         """
-        
+
         set_volume = self.effect_parameters.get("set_volume", {})
         effect_parameters.pop("set_volume", None)
         self.effect_parameters = {
             "set_volume": {
                 "factor": set_volume.get("factor", self.__kwargs.get("volume", 1.0))
             },
-            **effect_parameters
+            **effect_parameters,
         }
         return self.effect_parameters
-    
+
     def _apply_basic_fx(self, data: np.ndarray) -> np.ndarray:
 
         if data is None:
@@ -97,7 +101,7 @@ class InputTrack:
             if params is not None:
                 data = effect(data, **params)
         return data
-    
+
     def read(self) -> Union[np.ndarray, None]:
 
         """
@@ -114,19 +118,16 @@ class InputTrack:
         data = self.__data
         if self.callback:
             data = self.callback(self, data, self.overflow)
-        
+
         if self.apply_basic_fx:
             data = self._apply_basic_fx(data)
-        
+
         data = np.resize(
             data,
             (
                 self.chunk_size,
-                self.sounddevice_parameters.get(
-                    "channels",
-                    sd.default.channels[0]
-                )
-            )
+                self.sounddevice_parameters.get("channels", sd.default.channels[0]),
+            ),
         )
 
         if any((data == x).all() for x in self.__buffer):
@@ -144,12 +145,12 @@ class InputTrack:
 
         while self._stopped:
             time.sleep(0.001)
-        
+
     def stop(self) -> None:
         self._stop_signal = True
         while not self._stopped:
             time.sleep(0.001)
-    
+
     def __start__(self) -> None:
         with sd.InputStream(**self.sounddevice_parameters) as f:
             self._stopped = False
@@ -159,12 +160,12 @@ class InputTrack:
                     data, overflow = f.read(self.chunk_size)
                 except sd.PortAudioError:
                     break
-                
+
                 self.__data = data
                 self.overflow = overflow
 
                 time.sleep(0.001)
-        
+
         """This code is only reached once the track has been stopped."""
         self._stopped = True
         self.stream = None

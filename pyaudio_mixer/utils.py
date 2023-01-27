@@ -1,13 +1,22 @@
 import math
-import noisereduce
 
+import noisereduce
 import numpy as np
-from pedalboard import (Chorus, Compressor, Pedalboard, Phaser, PitchShift,
-                        Reverb, NoiseGate, HighpassFilter, LowpassFilter)
+from pedalboard import (
+    Chorus,
+    Compressor,
+    HighpassFilter,
+    LowpassFilter,
+    NoiseGate,
+    Pedalboard,
+    Phaser,
+    PitchShift,
+    Reverb,
+)
 
 
 class BasicFX:
-    
+
     """
     This class is responsible for handling basic effects such as volume changer.
     The pedalboard is also utilized for more "advanced" effects such as compression, pitch shifting, etc.
@@ -37,51 +46,55 @@ class BasicFX:
             self.noise_gate,
             self.noise_reduction,
             self.highpass_filter,
-            self.lowpass_filter
+            self.lowpass_filter,
         ]
 
         self.dtype = dtype
         self.samplerate = samplerate
-    
+
     def set_volume(self, data: np.ndarray, factor: float) -> np.ndarray:
         """Increase the volume of the provided audio data by a factor of `float`"""
-        return np.multiply(data, pow(
-            2, (math.sqrt(math.sqrt(math.sqrt(factor))) * 192 - 192) / 6), casting="unsafe", dtype=self.dtype)
-    
+        return np.multiply(
+            data,
+            pow(2, (math.sqrt(math.sqrt(math.sqrt(factor))) * 192 - 192) / 6),
+            casting="unsafe",
+            dtype=self.dtype,
+        )
+
     def chorus(self, data: np.ndarray, **params) -> np.ndarray:
 
         board = Pedalboard([Chorus(**params)])
         data = board(data, self.samplerate)
         return data
-    
+
     def reverb(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([Reverb(**params)])
         return board(data, self.samplerate)
-    
+
     def phaser(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([Phaser(**params)])
         return board(data, self.samplerate)
-    
+
     def pitch_shift(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([PitchShift(**params)])
         return board(data, self.samplerate)
-    
+
     def compressor(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([Compressor(**params)])
         return board(data, self.samplerate)
-    
+
     def noise_gate(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([NoiseGate(**params)])
         return board(data, self.samplerate)
-    
+
     def noise_reduction(self, data: np.ndarray, **params) -> np.ndarray:
         data = data.transpose()
         return noisereduce.reduce_noise(data, sr=self.samplerate, **params)
-    
+
     def highpass_filter(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([HighpassFilter(**params)])
         return board(data, self.samplerate)
-    
+
     def lowpass_filter(self, data: np.ndarray, **params) -> np.ndarray:
         board = Pedalboard([LowpassFilter(**params)])
         return board(data, self.samplerate)

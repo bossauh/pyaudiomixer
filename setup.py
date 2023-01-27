@@ -1,6 +1,5 @@
 from distutils.core import setup
 
-
 install_requires = [
     "sounddevice==0.4.4",
     "soundfile==0.10.3.post1",
@@ -10,7 +9,7 @@ install_requires = [
     "maglevapi",
     "pedalboard",
     "noisereduce",
-    "soxr"
+    "soxr",
 ]
 
 
@@ -32,7 +31,6 @@ setup(
         "Topic :: Software Development :: Build Tools",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7"
-    ]
+        "Programming Language :: Python :: 3.7",
+    ],
 )
-

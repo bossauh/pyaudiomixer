@@ -1,6 +1,7 @@
-from typing import Union, List
-from .output import OutputTrack
+from typing import List, Union
+
 from .input import InputTrack
+from .output import OutputTrack
 
 
 class Mixer:
@@ -19,17 +20,17 @@ class Mixer:
     `generate_out` : int
         Number of output tracks to generate if wanted. Defaults to 0.
     `generate_in` : int
-        Number of input tracks to generate if wanted. Defaults to 0. 
+        Number of input tracks to generate if wanted. Defaults to 0.
     """
 
     def __init__(
         self,
         tracks: Union[List[OutputTrack], List[InputTrack]] = None,
         generate_out: int = 0,
-        generate_in: int = 0
+        generate_in: int = 0,
     ) -> None:
         self.tracks = tracks
-        
+
         # Generate tracks
         self.generate_tracks(generate_out, type_="out")
         self.generate_tracks(generate_in, type_="in")
@@ -53,7 +54,9 @@ class Mixer:
         """
         return [x for x in self.tracks if isinstance(x, OutputTrack) and not x._playing]
 
-    def generate_tracks(self, n: int, type_: str = "out") -> Union[List[OutputTrack], List[InputTrack]]:
+    def generate_tracks(
+        self, n: int, type_: str = "out"
+    ) -> Union[List[OutputTrack], List[InputTrack]]:
 
         """
         Generate a "n" amount of input ("in") or output ("out", default) tracks.
@@ -79,40 +82,37 @@ class Mixer:
         if n < 1:
             return []
 
-        mappings = {
-            "out": OutputTrack,
-            "in": InputTrack
-        }
+        mappings = {"out": OutputTrack, "in": InputTrack}
 
         for _ in range(n):
-            
+
             if type_ == "out":
                 idx = len(self.output_tracks)
             elif type_ == "in":
                 idx = len(self.input_tracks)
-            
+
             idx = (idx - 1) if idx > 0 else 0
             track = mappings[type_](f"track {idx}")
             self.tracks.append(track)
-    
+
     def get_output_track(self, name: str) -> Union[OutputTrack, None]:
         track = [x for x in self.output_tracks if x.name == name]
         if track:
             return track[0]
-    
+
     def get_input_track(self, name: str) -> Union[InputTrack, None]:
         track = [x for x in self.input_tracks if x.name == name]
         if track:
             return track[0]
-    
+
     async def abort_outputs(self) -> None:
         for track in self.output_tracks:
             await track.abort()
-    
+
     async def stop_outputs(self) -> None:
         for track in self.output_tracks:
             await track.stop()
-        
+
     async def stop_inputs(self) -> None:
         for track in self.input_tracks:
             track.stop()

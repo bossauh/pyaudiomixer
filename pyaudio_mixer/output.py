@@ -1,11 +1,10 @@
 import asyncio
-from typing import Union
 import os
 import queue
 import threading
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 import ffmpy
 import librosa
@@ -14,8 +13,8 @@ import sounddevice as sd
 import soundfile as sf
 
 from .exceptions import *
-from .utils import BasicFX
 from .input import InputTrack
+from .utils import BasicFX
 
 sd.default.channels = 2
 sd.default.samplerate = 44100
@@ -75,7 +74,9 @@ class OutputTrack:
         # Effect variables
         self.basicfx = BasicFX(
             dtype=self.sounddevice_parameters.get("dtype", sd.default.dtype[1]),
-            samplerate=self.sounddevice_parameters.get("samplerate", sd.default.samplerate)
+            samplerate=self.sounddevice_parameters.get(
+                "samplerate", sd.default.samplerate
+            ),
         )
         __effect_params = kwargs.get("effect_parameters", {})
         self.effect_parameters = {}
@@ -102,7 +103,7 @@ class OutputTrack:
         if self._playing_details:
             return self._playing_details
         return None
-    
+
     def update_effects(self, effect_parameters: dict) -> dict:
         """
         Update the effect_parameters attribute of this class. Check docstring of the class itself for more information about that attribute. (Also to know how this parameter is formatted)
@@ -112,14 +113,14 @@ class OutputTrack:
         `dict` :
             A dictionary containing what effects are enabled (and their parameters)
         """
-        
+
         set_volume = self.effect_parameters.get("set_volume", {})
         effect_parameters.pop("set_volume", None)
         self.effect_parameters = {
             "set_volume": {
                 "factor": set_volume.get("factor", self.__kwargs.get("volume", 1.0))
             },
-            **effect_parameters
+            **effect_parameters,
         }
         return self.effect_parameters
 
@@ -150,15 +151,15 @@ class OutputTrack:
 
         while self._playing:
             await asyncio.sleep(0.001)
-        
+
     def stop_cast(self) -> None:
         """Stop the currently casted input if there is any."""
         self._stop_cast_signal = True
-        
+
     def cast_input(self, inp: InputTrack) -> None:
         """
         Direct all data of the provided input track to this output track.
-        This is a non blocking function that runs in the background. 
+        This is a non blocking function that runs in the background.
         Casting can be stopped by calling `cast_stop()`
 
         Notes
@@ -180,7 +181,7 @@ class OutputTrack:
             raise RuntimeError("input track is not running")
 
         threading.Thread(target=self.__cast_input__, args=(inp,), daemon=True).start()
-    
+
     def __cast_input__(self, inp: InputTrack) -> None:
         while not self._stop_cast_signal:
             frame = inp.read()
@@ -189,7 +190,7 @@ class OutputTrack:
 
             if frame is not None:
                 self.write(frame)
-        
+
         self._stop_cast_signal = False
 
     def write(
@@ -198,14 +199,14 @@ class OutputTrack:
         wait: bool = True,
         resample: bool = False,
         resampling_method: str = "soxr_vhq",
-        original_samplerate: int = None
+        original_samplerate: int = None,
     ) -> bool:
         """
         Write the provided data into the buffer (i.e., play it on the speakers).
 
         Parameters
         ----------
-        `data` : np.ndarray 
+        `data` : np.ndarray
             The data to write.
         `wait` : bool
             Wait for there to be a space in the queue. Defaults to True. If this is False, this function returns instantly.
@@ -223,7 +224,7 @@ class OutputTrack:
 
         Raises
         ------
-        `InterruptedError` : 
+        `InterruptedError` :
             Raised when abort() get's called. How abort() basically works is that it first sends the clear signal, now once this function is called, we check if the clear signal has been sent and if it has been sent then it raises a InterruptedError, telling the caller that it's time to stop writing frames. (oh and it also clears the queue)
         `ValueError` :
             Raised when `resample` is True but `original_samplerate` was not provided.
@@ -245,7 +246,9 @@ class OutputTrack:
         except queue.Full:
             return False
 
-    def resample(self, data: np.ndarray, original: int, type_: str = "soxr_vhq") -> np.ndarray:
+    def resample(
+        self, data: np.ndarray, original: int, type_: str = "soxr_vhq"
+    ) -> np.ndarray:
         """
         Resample audio data to match the track's samplerate.
 
@@ -355,10 +358,7 @@ class OutputTrack:
             else:
                 resampling_type = "soxr_vhq"
 
-        load_method = {
-            True: sf.read,
-            False: sf.blocks
-        }
+        load_method = {True: sf.read, False: sf.blocks}
 
         try:
             data = load_method[load_in_memory](path, **kwargs)
@@ -378,11 +378,13 @@ class OutputTrack:
             ff = ffmpy.FFmpeg(
                 inputs={path: None},
                 outputs={out: None},
-                global_options=["-loglevel", "quiet", "-y"]
+                global_options=["-loglevel", "quiet", "-y"],
             )
 
             ff.run()
-            return await self.play_file(out, blocking, resample, chunk_size, load_in_memory, **kwargs)
+            return await self.play_file(
+                out, blocking, resample, chunk_size, load_in_memory, **kwargs
+            )
 
         def match_channels(d):
             # Match the number of channels of this track.
@@ -424,7 +426,7 @@ class OutputTrack:
             "file": path,
             "duration": librosa.get_duration(filename=path, sr=__detail_sr),
             "samplerate": __detail_sr,
-            "read": 0  # How many seconds were already read
+            "read": 0,  # How many seconds were already read
         }
 
         if blocking:
