@@ -16,13 +16,13 @@ install_requires = [
 setup(
     name="mixer_pyaudio",
     packages=["pyaudio_mixer"],
-    version="0.6",
+    version="0.7",
     license="MIT",
     description="Audio mixing simplified.",
     author="Philippe Mathew",
     author_email="philmattdev@gmail.com",
     url="https://github.com/bossauh/pyaudiomixer",
-    download_url="https://github.com/bossauh/pyaudiomixer/archive/refs/tags/v_06.tar.gz",
+    download_url="https://github.com/bossauh/pyaudiomixer/archive/refs/tags/v_07.tar.gz",
     keywords=["audio", "mixer", "mixing", "tool"],
     install_requires=install_requires,
     classifiers=[
